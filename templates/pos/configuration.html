@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración del Sistema{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="fw-bold mb-0">Configuración</h4>
+              <p class="text-muted small mb-0">Datos generales del negocio y parámetros de tickets</p>
+            </div>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i> Volver al panel
+            </a>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="bi bi-shop me-1"></i> Datos del Negocio
+            </h6>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Título del sistema *</label>
+                <input type="text" name="title" class="form-control" value="{{ config.title }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nombre de la empresa / negocio *</label>
+                <input type="text" name="company_name" class="form-control" value="{{ config.company_name }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Teléfono</label>
+                <input type="text" name="company_phone" class="form-control" value="{{ config.company_phone }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Dirección</label>
+                <input type="text" name="company_address" class="form-control" value="{{ config.company_address }}">
+              </div>
+            </div>
+
+            <hr>
+
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="bi bi-receipt me-1"></i> Parámetros de Tickets y Comprobantes
+            </h6>
+
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Frase de agradecimiento al pie del ticket</label>
+                <input type="text" name="ticket_footer" class="form-control" value="{{ config.ticket_footer }}">
+                <small class="text-muted">Aparece al final de los tickets impresos y descargados en PDF.</small>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'dashboard' %}" class="btn btn-light border px-4">Cancelar</a>
+              <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar configuración</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

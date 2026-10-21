@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio - RegilogPy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row align-items-center py-5">
+    <div class="col-lg-7 text-center text-lg-start">
+      <h1 class="display-5 fw-bold text-dark mb-3">
+        Registro y cuentas de usuario
+      </h1>
+      <p class="lead text-muted mb-4">
+        Crea tu cuenta, inicia sesión y administra tus datos personales en un solo lugar.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start mb-4">
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}" class="btn btn-primary-custom btn-lg rounded-pill px-4">
+            <i class="bi bi-speedometer2 me-2"></i> Mi panel
+          </a>
+          <a href="{% url 'profile' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+            <i class="bi bi-person me-2"></i> Mi perfil
+          </a>
+        {% else %}
+          <a href="{% url 'register' %}" class="btn btn-primary-custom btn-lg rounded-pill px-4">
+            <i class="bi bi-person-plus me-2"></i> Crear cuenta
+          </a>
+          <a href="{% url 'login' %}" class="btn btn-outline-dark btn-lg rounded-pill px-4">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar sesión
+          </a>
+        {% endif %}
+      </div>
+
+      <p class="text-muted small">
+        <i class="bi bi-people me-1"></i> Usuarios registrados: <strong>{{ total_users }}</strong>
+      </p>
+    </div>
+
+    <div class="col-lg-5 mt-4 mt-lg-0">
+      <div class="card-modern p-4">
+        <h5 class="fw-bold text-dark mb-3">Accesos rápidos</h5>
+        <div class="list-group list-group-flush small">
+          <div class="list-group-item bg-transparent d-flex align-items-center gap-3 py-3 px-0">
+            <i class="bi bi-person-plus text-primary fs-4"></i>
+            <div>
+              <strong>Registro</strong>
+              <div class="text-muted">Crea una cuenta con tu nombre, usuario y correo.</div>
+            </div>
+          </div>
+          <div class="list-group-item bg-transparent d-flex align-items-center gap-3 py-3 px-0">
+            <i class="bi bi-box-arrow-in-right text-success fs-4"></i>
+            <div>
+              <strong>Inicio de sesión</strong>
+              <div class="text-muted">Entra usando tu usuario o tu correo electrónico.</div>
+            </div>
+          </div>
+          <div class="list-group-item bg-transparent d-flex align-items-center gap-3 py-3 px-0">
+            <i class="bi bi-person-gear text-info fs-4"></i>
+            <div>
+              <strong>Perfil</strong>
+              <div class="text-muted">Actualiza tus datos de contacto y foto.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 py-2">
+    <div class="col-md-4">
+      <div class="card-modern h-100 p-4">
+        <div class="stat-icon stat-icon-primary mb-3">
+          <i class="bi bi-person-badge"></i>
+        </div>
+        <h5 class="fw-bold mb-2">Cuentas</h5>
+        <p class="text-muted small mb-0">
+          Formulario de registro simple con validación de correo y usuario único.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-modern h-100 p-4">
+        <div class="stat-icon stat-icon-success mb-3">
+          <i class="bi bi-person-vcard"></i>
+        </div>
+        <h5 class="fw-bold mb-2">Perfil</h5>
+        <p class="text-muted small mb-0">
+          Edita tu nombre, teléfono, dirección, biografía y foto cuando quieras.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card-modern h-100 p-4">
+        <div class="stat-icon stat-icon-warning mb-3">
+          <i class="bi bi-key"></i>
+        </div>
+        <h5 class="fw-bold mb-2">Contraseña</h5>
+        <p class="text-muted small mb-0">
+          Cambia tu clave desde tu cuenta de forma directa.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

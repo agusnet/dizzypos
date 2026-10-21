@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0">Inventarios</h3>
+      <p class="text-muted mb-0">Existencia actual de productos y control de stock mínimo</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'product_create' %}" class="btn btn-outline-primary fw-semibold">
+        <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
+      </a>
+      <a href="{% url 'pos_purchase' %}" class="btn btn-success fw-semibold">
+        <i class="bi bi-box-arrow-in-down me-1"></i> Entrada / Compra
+      </a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+
+      <!-- Filtros -->
+      <form method="get" class="row g-2 mb-3">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o código de barra..." value="{{ q }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select name="category" class="form-select">
+            <option value="">Todas las categorías</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="status" class="form-select">
+            <option value="">Todos los estados</option>
+            <option value="low" {% if selected_status == 'low' %}selected{% endif %}>Stock bajo / Agotado</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+          <button class="btn btn-secondary flex-grow-1" type="submit">Filtrar</button>
+          {% if q or selected_category or selected_status %}
+          <a href="{% url 'inventory_list' %}" class="btn btn-outline-secondary">Limpiar</a>
+          {% endif %}
+        </div>
+      </form>
+
+      <!-- Tabla de Inventario -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small">
+            <tr>
+              <th style="width: 130px;">Código</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th class="text-end">Costo</th>
+              <th class="text-end">Precio Venta</th>
+              <th class="text-center">Mínimo</th>
+              <th class="text-center">Existencia</th>
+              <th class="text-center">Estado</th>
+              <th class="text-end" style="width: 140px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prod in page_obj %}
+            <tr>
+              <td class="text-muted small">{{ prod.barcode|default:"-" }}</td>
+              <td>
+                <span class="fw-semibold d-block">{{ prod.name }}</span>
+                {% if prod.presentation %}<small class="text-muted">{{ prod.presentation }}</small>{% endif %}
+              </td>
+              <td>{{ prod.category.name|default:"Sin categoría" }}</td>
+              <td class="text-end text-muted small">${{ prod.price_in|floatformat:2 }}</td>
+              <td class="text-end fw-semibold text-primary">${{ prod.price_out|floatformat:2 }}</td>
+              <td class="text-center text-muted small">{{ prod.inventary_min }}</td>
+              <td class="text-center">
+                <span class="fw-bold fs-6">{{ prod.current_stock|floatformat:0 }}</span>
+                {% if prod.unit %}<small class="text-muted d-block text-xs">{{ prod.unit }}</small>{% endif %}
+              </td>
+              <td class="text-center">
+                {% if prod.current_stock <= 0 %}
+                <span class="badge bg-danger">Agotado</span>
+                {% elif prod.is_low_stock %}
+                <span class="badge bg-warning text-dark">Stock bajo</span>
+                {% else %}
+                <span class="badge bg-success">Normal</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'product_update' prod.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Editar producto">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'pos_purchase' %}" class="btn btn-sm btn-outline-success py-1 px-2 ms-1" title="Surtir inventario">
+                  <i class="bi bi-plus-lg"></i> Surtir
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-4 text-muted">
+                No se encontraron productos en inventario.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      {% if page_obj.has_other_pages %}
+      <nav class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Anterior</a>
+          </li>
+          {% endif %}
+          <li class="page-item active">
+            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Siguiente</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

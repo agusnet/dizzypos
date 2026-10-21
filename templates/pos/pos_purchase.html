@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Compra{% endblock %}
+
+{% block extra_head %}
+<style>
+  .product-grid-container {
+    max-height: calc(100vh - 190px);
+    overflow-y: auto;
+  }
+  .cart-container {
+    max-height: calc(100vh - 190px);
+    display: flex;
+    flex-direction: column;
+  }
+  .cart-items-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .product-card {
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+  }
+  .product-img-box {
+    height: 110px;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .product-img-box img {
+    max-height: 100%;
+    object-fit: cover;
+    width: 100%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-lg-4">
+  <div class="row g-3">
+
+    <!-- COLUMNA IZQUIERDA: BÚSQUEDA Y CUADRÍCULA DE PRODUCTOS -->
+    <div class="col-lg-7 col-xl-8">
+      <div class="card border-0 shadow-sm rounded-3 p-3">
+        
+        <!-- Buscador y Filtros -->
+        <div class="row g-2 mb-3">
+          <div class="col-md-7">
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-muted"></i>
+              </span>
+              <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Buscar producto para comprar..." autofocus>
+              <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <select id="categoryFilter" class="form-select">
+              <option value="">Todas las categorías</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Cuadrícula de Productos -->
+        <div class="product-grid-container pe-1">
+          <div class="row row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-xl-4 g-2" id="productsGrid">
+            {% for prod in products %}
+            <div class="col product-item" 
+                 data-id="{{ prod.id }}"
+                 data-name="{{ prod.name|escapejs }}"
+                 data-cost="{{ prod.price_in }}"
+                 data-barcode="{{ prod.barcode|default:''|escapejs }}"
+                 data-category="{{ prod.category_id|default:'' }}"
+                 data-stock="{{ prod.current_stock }}">
+              
+              <div class="card h-100 border product-card rounded-3 overflow-hidden" onclick="addToPurchaseCart({{ prod.id }}, '{{ prod.name|escapejs }}', {{ prod.price_in }}, {{ prod.current_stock }})">
+                <div class="product-img-box position-relative">
+                  {% if prod.image %}
+                  <img src="{{ prod.image.url }}" alt="{{ prod.name }}">
+                  {% else %}
+                  <i class="bi bi-box-seam text-secondary fs-1 opacity-50"></i>
+                  {% endif %}
+                  
+                  <span class="position-absolute top-0 end-0 m-1 badge bg-secondary">
+                    Stock actual: {{ prod.current_stock|floatformat:0 }}
+                  </span>
+                </div>
+                
+                <div class="card-body p-2 d-flex flex-column justify-content-between">
+                  <div>
+                    <h6 class="card-title fw-bold mb-1 text-truncate" title="{{ prod.name }}">{{ prod.name }}</h6>
+                    <small class="text-muted d-block text-truncate">Costo: ${{ prod.price_in|floatformat:2 }}</small>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="fw-bold text-success fs-5">${{ prod.price_in|floatformat:2 }}</span>
+                    <button class="btn btn-sm btn-success rounded-circle p-1" style="width: 28px; height: 28px; line-height: 1;">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              No hay productos registrados.
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: CARRITO DE COMPRA -->
+    <div class="col-lg-5 col-xl-4">
+      <div class="card border-0 shadow-sm rounded-3 p-3 cart-container">
+        
+        <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-2">
+          <h5 class="fw-bold mb-0 text-success">
+            <i class="bi bi-bag-plus me-1"></i> Carrito de Compra
+          </h5>
+          <button class="btn btn-sm btn-outline-danger" onclick="clearCart()" title="Limpiar compra">
+            <i class="bi bi-trash me-1"></i> Vaciar
+          </button>
+        </div>
+
+        <!-- Selector de Proveedor -->
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Proveedor</label>
+          <select id="providerSelect" class="form-select form-select-sm">
+            <option value="">Proveedor general</option>
+            {% for prov in providers %}
+            <option value="{{ prov.id }}">{{ prov.name }} {{ prov.lastname|default:'' }} {% if prov.company %}({{ prov.company }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Lista de Items de Compra -->
+        <div class="cart-items-list mb-3 flex-grow-1 border rounded p-1 bg-white">
+          <div id="cartEmptyMessage" class="text-center py-5 text-muted">
+            <i class="bi bi-cart-x fs-2 d-block mb-1 opacity-50"></i>
+            Carrito de compra vacío<br>
+            <small class="text-secondary">Haz clic en un producto para agregarlo</small>
+          </div>
+          <table class="table table-sm align-middle mb-0" id="cartTable" style="display: none;">
+            <thead class="table-light small">
+              <tr>
+                <th>Producto</th>
+                <th style="width: 80px;" class="text-center">Cant.</th>
+                <th style="width: 75px;" class="text-center">Costo</th>
+                <th class="text-end">Subtotal</th>
+                <th style="width: 25px;"></th>
+              </tr>
+            </thead>
+            <tbody id="cartTableBody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resumen de Totales -->
+        <div class="bg-light p-3 rounded-3 mb-3">
+          <div class="d-flex justify-content-between fw-bold fs-4 text-dark">
+            <span>Total Compra:</span>
+            <span id="cartTotalText" class="text-success">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Botón de Guardar Compra -->
+        <button id="btnCompletePurchase" class="btn btn-success btn-lg w-100 fw-bold py-2 shadow-sm" onclick="completePurchase()" disabled>
+          <i class="bi bi-box-arrow-in-down me-1"></i> Guardar Compra / Entrada
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let purchaseCart = [];
+
+  function addToPurchaseCart(id, name, cost, stock) {
+    const existing = purchaseCart.find(item => item.id === id);
+    if (existing) {
+      existing.q += 1;
+    } else {
+      purchaseCart.push({
+        id: id,
+        name: name,
+        cost: parseFloat(cost),
+        stock: parseFloat(stock),
+        q: 1
+      });
+    }
+    renderCart();
+  }
+
+  function updateQuantity(id, delta) {
+    const item = purchaseCart.find(i => i.id === id);
+    if (!item) return;
+    item.q += delta;
+    if (item.q <= 0) {
+      removeFromCart(id);
+    } else {
+      renderCart();
+    }
+  }
+
+  function setQuantity(id, val) {
+    const item = purchaseCart.find(i => i.id === id);
+    if (!item) return;
+    const q = parseFloat(val);
+    if (isNaN(q) || q <= 0) {
+      removeFromCart(id);
+    } else {
+      item.q = q;
+      renderCart();
+    }
+  }
+
+  function setCost(id, val) {
+    const item = purchaseCart.find(i => i.id === id);
+    if (!item) return;
+    const cost = parseFloat(val);
+    if (!isNaN(cost) && cost >= 0) {
+      item.cost = cost;
+      renderCart();
+    }
+  }
+
+  function removeFromCart(id) {
+    purchaseCart = purchaseCart.filter(item => item.id !== id);
+    renderCart();
+  }
+
+  function clearCart() {
+    if (purchaseCart.length === 0) return;
+    if (confirm("¿Deseas vaciar el carrito de compra?")) {
+      purchaseCart = [];
+      renderCart();
+    }
+  }
+
+  function renderCart() {
+    const tbody = document.getElementById('cartTableBody');
+    const table = document.getElementById('cartTable');
+    const emptyMsg = document.getElementById('cartEmptyMessage');
+    const btnSubmit = document.getElementById('btnCompletePurchase');
+
+    tbody.innerHTML = '';
+
+    if (purchaseCart.length === 0) {
+      table.style.display = 'none';
+      emptyMsg.style.display = 'block';
+      btnSubmit.disabled = true;
+    } else {
+      table.style.display = 'table';
+      emptyMsg.style.display = 'none';
+      btnSubmit.disabled = false;
+
+      purchaseCart.forEach(item => {
+        const lineTotal = (item.q * item.cost).toFixed(2);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div class="fw-semibold text-truncate" style="max-width: 120px;" title="${item.name}">${item.name}</div>
+          </td>
+          <td class="text-center">
+            <div class="input-group input-group-sm">
+              <button class="btn btn-outline-secondary p-0 px-1" type="button" onclick="updateQuantity(${item.id}, -1)">-</button>
+              <input type="number" class="form-control text-center p-0" style="max-width: 35px;" value="${item.q}" min="1" step="1" onchange="setQuantity(${item.id}, this.value)">
+              <button class="btn btn-outline-secondary p-0 px-1" type="button" onclick="updateQuantity(${item.id}, 1)">+</button>
+            </div>
+          </td>
+          <td class="text-center">
+            <input type="number" class="form-control form-control-sm text-end p-1" style="max-width: 70px;" value="${item.cost.toFixed(2)}" min="0" step="0.50" onchange="setCost(${item.id}, this.value)">
+          </td>
+          <td class="text-end fw-semibold">$${lineTotal}</td>
+          <td class="text-center">
+            <button class="btn btn-sm text-danger p-0 border-0" onclick="removeFromCart(${item.id})" title="Eliminar">
+              <i class="bi bi-x-circle"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    calculateTotals();
+  }
+
+  function calculateTotals() {
+    const total = purchaseCart.reduce((sum, item) => sum + (item.q * item.cost), 0);
+    document.getElementById('cartTotalText').textContent = `$${total.toFixed(2)}`;
+  }
+
+  function completePurchase() {
+    if (purchaseCart.length === 0) {
+      alert("El carrito está vacío.");
+      return;
+    }
+
+    const total = purchaseCart.reduce((sum, item) => sum + (item.q * item.cost), 0);
+    const providerId = document.getElementById('providerSelect').value;
+    const btnSubmit = document.getElementById('btnCompletePurchase');
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+    const payload = {
+      person_id: providerId ? parseInt(providerId) : null,
+      total: total,
+      cash: total,
+      discount: 0,
+      items: purchaseCart
+    };
+
+    fetch("{% url 'pos_purchase' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        window.location.href = `/transaccion/${data.sell_id}/`;
+      } else {
+        alert("Error al registrar compra: " + (data.message || "Error desconocido"));
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i class="bi bi-box-arrow-in-down me-1"></i> Guardar Compra / Entrada';
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error de conexión al procesar la compra.");
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<i class="bi bi-box-arrow-in-down me-1"></i> Guardar Compra / Entrada';
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', filterProducts);
+  document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+
+  document.getElementById('clearSearch').addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    filterProducts();
+  });
+
+  function filterProducts() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const cat = document.getElementById('categoryFilter').value;
+    const items = document.querySelectorAll('.product-item');
+
+    items.forEach(el => {
+      const name = el.getAttribute('data-name').toLowerCase();
+      const barcode = el.getAttribute('data-barcode').toLowerCase();
+      const elCat = el.getAttribute('data-category');
+
+      const matchesQuery = (!q || name.includes(q) || barcode.includes(q));
+      const matchesCategory = (!cat || elCat === cat);
+
+      if (matchesQuery && matchesCategory) {
+        el.style.display = '';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Comprobante de Compra #{{ sell.id }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ticket-card {
+    max-width: 400px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px dashed #198754;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #printableTicket, #printableTicket * {
+      visibility: visible;
+    }
+    #printableTicket {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      border: none;
+      box-shadow: none !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+  <!-- Botones de Acción (no visibles al imprimir) -->
+  <div class="d-flex justify-content-center gap-2 mb-3 no-print">
+    <a href="{% url 'purchases_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Compras
+    </a>
+    <a href="{% url 'pos_purchase' %}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-bag-plus me-1"></i> Nueva Compra
+    </a>
+    <button onclick="window.print()" class="btn btn-dark btn-sm">
+      <i class="bi bi-printer me-1"></i> Imprimir
+    </button>
+    <a href="{% url 'ticket_purchase_pdf' sell.id %}" class="btn btn-danger btn-sm" target="_blank">
+      <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+    </a>
+  </div>
+
+  <!-- Tarjeta Formato Ticket de Compra -->
+  <div class="card ticket-card shadow-sm p-4 rounded-0" id="printableTicket">
+    
+    <div class="text-center pb-2 mb-2">
+      <h5 class="fw-bold mb-1">{{ config.company_name|default:"DizzyPOS" }}</h5>
+      <p class="small mb-0 text-muted">{{ config.company_address }}</p>
+      <p class="small mb-1 text-muted">Tel: {{ config.company_phone }}</p>
+      <div class="border-top border-bottom py-1 my-2">
+        <span class="fw-bold text-success">COMPROBANTE DE COMPRA #{{ sell.id }}</span>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="small mb-2">
+      <div><strong>Fecha:</strong> {{ sell.created_at|date:"d/m/Y H:i" }}</div>
+      <div><strong>Registrado por:</strong> {{ sell.user.first_name|default:sell.user.username }}</div>
+      <div><strong>Proveedor:</strong> {{ sell.person.full_name|default:"Proveedor General" }}</div>
+      {% if sell.person.company %}<div><strong>Empresa:</strong> {{ sell.person.company }}</div>{% endif %}
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="border-top border-bottom py-2 my-2 small">
+      <table class="w-100">
+        <thead>
+          <tr class="fw-bold">
+            <th style="width: 15%;">Cant</th>
+            <th style="width: 50%;">Desc.</th>
+            <th style="width: 15%; text-align: right;">Costo</th>
+            <th style="width: 20%; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for op in sell.operations.all %}
+          <tr>
+            <td>{{ op.q|floatformat:0 }}</td>
+            <td class="text-truncate" style="max-width: 140px;">{{ op.product.name }}</td>
+            <td class="text-end">${{ op.product.price_in|floatformat:2 }}</td>
+            <td class="text-end fw-semibold">${{ op.q|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totales -->
+    <div class="small">
+      <div class="d-flex justify-content-between fw-bold fs-6 my-1 border-top pt-1">
+        <span>TOTAL COMPRA:</span>
+        <span class="text-success">${{ sell.total|floatformat:2 }}</span>
+      </div>
+    </div>
+
+    <!-- Agradecimiento -->
+    <div class="text-center mt-3 pt-2 border-top small text-muted">
+      <p class="mb-0 fw-semibold">Entrada al inventario registrada correctamente.</p>
+      <p class="mb-0">{{ config.ticket_footer }}</p>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

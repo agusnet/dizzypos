@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold mb-0">{{ title }}</h4>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i> Volver a productos
+            </a>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nombre del producto *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Código de barra</label>
+                {{ form.barcode }}
+                {% if form.barcode.errors %}<div class="text-danger small">{{ form.barcode.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Categoría</label>
+                {{ form.category }}
+                {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Unidad</label>
+                {{ form.unit }}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Presentación</label>
+                {{ form.presentation }}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Precio compra (costo) *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  {{ form.price_in }}
+                </div>
+                {% if form.price_in.errors %}<div class="text-danger small">{{ form.price_in.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Precio de venta *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  {{ form.price_out }}
+                </div>
+                {% if form.price_out.errors %}<div class="text-danger small">{{ form.price_out.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Mínimo en inventario</label>
+                {{ form.inventary_min }}
+                {% if form.inventary_min.errors %}<div class="text-danger small">{{ form.inventary_min.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Descripción</label>
+                {{ form.description }}
+              </div>
+
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Imagen del producto</label>
+                {{ form.image }}
+                {% if form.image.errors %}<div class="text-danger small">{{ form.image.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4 d-flex align-items-center mt-md-4">
+                <div class="form-check mt-3">
+                  {{ form.is_active }}
+                  <label class="form-check-label fw-semibold ms-1" for="{{ form.is_active.id_for_label }}">
+                    Producto Activo
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'product_list' %}" class="btn btn-light border px-4">Cancelar</a>
+              <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar producto</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

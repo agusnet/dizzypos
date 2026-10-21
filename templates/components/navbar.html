@@ -1,0 +1,175 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+  <div class="container-fluid px-3 px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'dashboard' %}">
+      <i class="bi bi-cart4 text-warning fs-4"></i>
+      <span>DizzyPOS</span>
+    </a>
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Navegación">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      {% if user.is_authenticated %}
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+        
+        <!-- Inicio -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active fw-semibold text-white{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-1"></i> Inicio
+          </a>
+        </li>
+
+        {% if user.profile.is_admin %}
+        <!-- MENÚ ADMINISTRADOR -->
+        
+        <!-- 1. Ventas -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'sale' in request.resolver_match.url_name or 'sales' in request.resolver_match.url_name and 'report' not in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-cart-check me-1"></i> Ventas
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2 fw-semibold text-primary" href="{% url 'pos_sale' %}"><i class="bi bi-calculator me-2"></i> Punto de Venta (POS)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2" href="{% url 'sales_list' %}"><i class="bi bi-card-checklist me-2"></i> Historial de Ventas</a></li>
+          </ul>
+        </li>
+
+        <!-- 2. Menú Inventario (Inventario, nueva compra, historial de compras) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'inventory' in request.resolver_match.url_name or 'purchase' in request.resolver_match.url_name and 'report' not in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-boxes me-1"></i> Inventario
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2" href="{% url 'inventory_list' %}"><i class="bi bi-box-seam me-2 text-primary"></i> Inventario</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2 fw-semibold text-success" href="{% url 'pos_purchase' %}"><i class="bi bi-box-arrow-in-down me-2"></i> Nueva compra</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'purchases_list' %}"><i class="bi bi-card-checklist me-2"></i> Historial de compras</a></li>
+          </ul>
+        </li>
+
+        <!-- 3. Menú Catálogos (Productos, Categorías, Clientes, Proveedores) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'product' in request.resolver_match.url_name or 'category' in request.resolver_match.url_name or 'client' in request.resolver_match.url_name or 'provider' in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-grid me-1"></i> Catálogos
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2" href="{% url 'product_list' %}"><i class="bi bi-tag me-2 text-primary"></i> Productos</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'category_list' %}"><i class="bi bi-bookmark me-2 text-info"></i> Categorías</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2" href="{% url 'client_list' %}"><i class="bi bi-people me-2 text-success"></i> Clientes</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'provider_list' %}"><i class="bi bi-truck me-2 text-warning"></i> Proveedores</a></li>
+          </ul>
+        </li>
+
+        <!-- 4. Menú Reportes (Ventas, Compras, Movimientos) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'report' in request.resolver_match.url_name or 'movement' in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-file-earmark-bar-graph me-1"></i> Reportes
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2" href="{% url 'report_sales' %}"><i class="bi bi-graph-up me-2 text-primary"></i> Reporte de ventas</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'report_purchases' %}"><i class="bi bi-bag-check me-2 text-success"></i> Reporte de compras</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2" href="{% url 'report_movements' %}"><i class="bi bi-arrow-left-right me-2 text-dark"></i> Reporte de movimientos</a></li>
+          </ul>
+        </li>
+
+        <!-- 5. Menú Administración (Usuarios y Configuración) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'user_' in request.resolver_match.url_name or 'config' in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-gear me-1"></i> Administración
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2" href="{% url 'user_list' %}"><i class="bi bi-person-gear me-2 text-primary"></i> Usuarios</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'configuration_view' %}"><i class="bi bi-sliders me-2 text-secondary"></i> Configuración</a></li>
+          </ul>
+        </li>
+
+        {% else %}
+        <!-- MENÚ VENDEDOR -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'pos_sale' %}active fw-semibold text-white{% endif %}" href="{% url 'pos_sale' %}">
+            <i class="bi bi-calculator me-1"></i> Punto de Venta
+          </a>
+        </li>
+
+        <!-- Catálogos para vendedor (Productos y Clientes) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'product' in request.resolver_match.url_name or 'client' in request.resolver_match.url_name %}active fw-semibold text-white{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-grid me-1"></i> Catálogos
+          </a>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item py-2" href="{% url 'product_list' %}"><i class="bi bi-tag me-2 text-primary"></i> Catálogo de productos</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'client_list' %}"><i class="bi bi-people me-2 text-success"></i> Directorio de clientes</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+
+      <!-- Menú Usuario a la derecha -->
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
+        {% if user.is_staff and user.profile.is_admin %}
+        <li class="nav-item">
+          <a class="btn btn-outline-light btn-sm px-3" href="/admin/" target="_blank">
+            <i class="bi bi-database-gear me-1"></i> Django Admin
+          </a>
+        </li>
+        {% endif %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1 px-2 rounded-pill bg-secondary bg-opacity-25 text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
+            <span>{{ user.first_name|default:user.username }}</span>
+            <span class="badge {% if user.profile.is_admin %}bg-primary{% else %}bg-info text-dark{% endif %} small">
+              {{ user.profile.get_kind_display }}
+            </span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+            <li class="px-3 py-2 text-muted border-bottom">
+              <small class="d-block text-uppercase fw-bold text-xs">Rol</small>
+              <span class="fw-semibold text-dark">{{ user.profile.get_kind_display }} (@{{ user.username }})</span>
+            </li>
+            {% if user.profile.is_admin %}
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'configuration_view' %}">
+                <i class="bi bi-sliders me-2 text-secondary"></i> Configuración
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'user_list' %}">
+                <i class="bi bi-person-gear me-2 text-secondary"></i> Usuarios
+              </a>
+            </li>
+            {% endif %}
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'profile' %}">
+                <i class="bi bi-person me-2 text-info"></i> Mi perfil
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'change_password' %}">
+                <i class="bi bi-key me-2 text-warning"></i> Cambiar contraseña
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+      {% else %}
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
+        <li class="nav-item">
+          <a class="btn btn-outline-light px-3 rounded-pill fw-semibold" href="{% url 'login' %}">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar sesión
+          </a>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>

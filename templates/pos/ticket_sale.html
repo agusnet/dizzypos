@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket de Venta #{{ sell.id }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ticket-card {
+    max-width: 380px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px dashed #ced4da;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #printableTicket, #printableTicket * {
+      visibility: visible;
+    }
+    #printableTicket {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      border: none;
+      box-shadow: none !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+  <!-- Botones de Acción (no visibles al imprimir) -->
+  <div class="d-flex justify-content-center gap-2 mb-3 no-print">
+    <a href="{% url 'sales_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Ventas
+    </a>
+    <a href="{% url 'pos_sale' %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+    </a>
+    <button onclick="window.print()" class="btn btn-dark btn-sm">
+      <i class="bi bi-printer me-1"></i> Imprimir
+    </button>
+    <a href="{% url 'ticket_sale_pdf' sell.id %}" class="btn btn-danger btn-sm" target="_blank">
+      <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+    </a>
+  </div>
+
+  <!-- Tarjeta Formato Ticket de Venta -->
+  <div class="card ticket-card shadow-sm p-4 rounded-0" id="printableTicket">
+    
+    <div class="text-center pb-2 mb-2">
+      <h5 class="fw-bold mb-1">{{ config.company_name|default:"DizzyPOS" }}</h5>
+      <p class="small mb-0 text-muted">{{ config.company_address }}</p>
+      <p class="small mb-1 text-muted">Tel: {{ config.company_phone }}</p>
+      <div class="border-top border-bottom py-1 my-2">
+        <span class="fw-bold">TICKET DE VENTA #{{ sell.id }}</span>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="small mb-2">
+      <div><strong>Fecha:</strong> {{ sell.created_at|date:"d/m/Y H:i" }}</div>
+      <div><strong>Cajero:</strong> {{ sell.user.first_name|default:sell.user.username }}</div>
+      <div><strong>Cliente:</strong> {{ sell.person.full_name|default:"Público en general" }}</div>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="border-top border-bottom py-2 my-2 small">
+      <table class="w-100">
+        <thead>
+          <tr class="fw-bold">
+            <th style="width: 15%;">Cant</th>
+            <th style="width: 50%;">Desc.</th>
+            <th style="width: 15%; text-align: right;">P.U.</th>
+            <th style="width: 20%; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for op in sell.operations.all %}
+          <tr>
+            <td>{{ op.q|floatformat:0 }}</td>
+            <td class="text-truncate" style="max-width: 140px;">{{ op.product.name }}</td>
+            <td class="text-end">${{ op.product.price_out|floatformat:2 }}</td>
+            <td class="text-end fw-semibold">${{ op.q|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totales -->
+    <div class="small">
+      {% if sell.discount and sell.discount > 0 %}
+      <div class="d-flex justify-content-between">
+        <span>Subtotal:</span>
+        <span>${{ calculated_subtotal|floatformat:2 }}</span>
+      </div>
+      <div class="d-flex justify-content-between text-danger">
+        <span>Descuento:</span>
+        <span>-${{ sell.discount|floatformat:2 }}</span>
+      </div>
+      {% endif %}
+      <div class="d-flex justify-content-between fw-bold fs-6 my-1 border-top pt-1">
+        <span>TOTAL:</span>
+        <span>${{ sell.total|floatformat:2 }}</span>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span>Pago:</span>
+        <span>${{ sell.cash|floatformat:2 }}</span>
+      </div>
+      <div class="d-flex justify-content-between fw-bold">
+        <span>Cambio:</span>
+        <span>${{ sell.change|floatformat:2 }}</span>
+      </div>
+    </div>
+
+    <!-- Agradecimiento -->
+    <div class="text-center mt-3 pt-2 border-top small text-muted">
+      <p class="mb-0 fw-semibold">{{ config.ticket_footer }}</p>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

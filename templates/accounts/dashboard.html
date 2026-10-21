@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel - RegilogPy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card-modern p-4 mb-4 bg-white border-0">
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <img src="{{ profile.avatar_url }}" alt="{{ user.username }}" class="avatar-img">
+      </div>
+      <div class="col">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+          <h2 class="fw-bold mb-0 text-dark">
+            {{ user.first_name|default:user.username }} {{ user.last_name }}
+          </h2>
+          {% if user.is_superuser %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+              Administrador
+            </span>
+          {% endif %}
+        </div>
+        <p class="text-muted mb-2">
+          <i class="bi bi-at me-1"></i>{{ user.username }} &bull;
+          <i class="bi bi-envelope me-1 ms-2"></i>{{ user.email }} &bull;
+          <i class="bi bi-calendar3 me-1 ms-2"></i>Registro: {{ user.date_joined|date:"d M Y" }}
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-pencil-square me-1"></i> Editar perfil
+          </a>
+          <a href="{% url 'change_password' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-key me-1"></i> Cambiar contraseña
+          </a>
+          {% if user.is_staff %}
+            <a href="/admin/" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+              <i class="bi bi-gear-fill me-1"></i> Administración
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-3 border-top">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <small class="fw-semibold text-muted">Perfil completado</small>
+        <small class="fw-bold text-primary">{{ completion_percentage }}%</small>
+      </div>
+      <div class="progress" style="height: 8px;">
+        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ completion_percentage }}%;" aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      {% if completion_percentage < 100 %}
+        <small class="text-muted mt-1 d-block">
+          Faltan datos en tu <a href="{% url 'profile' %}">perfil</a>.
+        </small>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card-modern p-3 h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon stat-icon-primary">
+            <i class="bi bi-person"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Estado</span>
+            <span class="fw-bold fs-5 text-dark">Activo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card-modern p-3 h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon stat-icon-info">
+            <i class="bi bi-telephone"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Teléfono</span>
+            <span class="fw-bold text-dark fs-6">{{ profile.phone|default:"Sin registrar" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card-modern p-3 h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon stat-icon-warning">
+            <i class="bi bi-geo-alt"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Ubicación</span>
+            <span class="fw-bold text-dark fs-6 text-truncate d-inline-block" style="max-width: 140px;">{{ profile.address|default:"Sin registrar" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card-modern p-3 h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon stat-icon-success">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Último acceso</span>
+            <span class="fw-bold text-dark fs-6">{{ user.last_login|date:"d/m/Y H:i"|default:"Primer acceso" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card-modern p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold text-dark mb-0">Datos de la cuenta</h5>
+          <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+            Editar
+          </a>
+        </div>
+
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <span class="text-muted">Nombre</span>
+            <span class="fw-semibold text-dark">{{ profile.full_name }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <span class="text-muted">Usuario</span>
+            <span class="fw-semibold text-dark">@{{ user.username }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <span class="text-muted">Correo</span>
+            <span class="fw-semibold text-dark">{{ user.email }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <span class="text-muted">Teléfono</span>
+            <span class="fw-semibold text-dark">{{ profile.phone|default:"-" }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <span class="text-muted">Dirección</span>
+            <span class="fw-semibold text-dark">{{ profile.address|default:"-" }}</span>
+          </li>
+          <li class="list-group-item py-2 px-0">
+            <span class="text-muted d-block mb-1">Biografía</span>
+            <p class="text-dark small mb-0">{{ profile.bio|default:"Sin descripción."|linebreaksbr }}</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card-modern p-4 h-100">
+        {% if user.is_staff and recent_users %}
+          <h5 class="fw-bold text-dark mb-3">Usuarios recientes</h5>
+          <div class="list-group list-group-flush">
+            {% for u in recent_users %}
+            <div class="list-group-item d-flex align-items-center gap-3 py-2 px-0">
+              <img src="{{ u.profile.avatar_url }}" alt="{{ u.username }}" class="avatar-nav">
+              <div class="flex-grow-1 overflow-hidden">
+                <span class="fw-semibold text-dark d-block text-truncate">
+                  {{ u.first_name|default:u.username }} {{ u.last_name }}
+                </span>
+                <small class="text-muted text-truncate d-block">
+                  @{{ u.username }} &bull; {{ u.date_joined|date:"d M" }}
+                </small>
+              </div>
+              {% if u == user %}
+                <span class="badge bg-primary-subtle text-primary rounded-pill">Tú</span>
+              {% elif u.is_superuser %}
+                <span class="badge bg-secondary-subtle text-secondary rounded-pill">Admin</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <h5 class="fw-bold text-dark mb-3">Acciones</h5>
+          <div class="d-grid gap-2">
+            <a href="{% url 'profile' %}" class="btn btn-light border text-start d-flex align-items-center gap-2 py-2">
+              <i class="bi bi-pencil text-primary fs-5"></i>
+              <div>
+                <span class="fw-semibold d-block">Editar perfil</span>
+                <small class="text-muted">Nombre, teléfono y foto</small>
+              </div>
+            </a>
+            <a href="{% url 'change_password' %}" class="btn btn-light border text-start d-flex align-items-center gap-2 py-2">
+              <i class="bi bi-key text-warning fs-5"></i>
+              <div>
+                <span class="fw-semibold d-block">Cambiar contraseña</span>
+                <small class="text-muted">Actualizar clave de acceso</small>
+              </div>
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-light border text-start d-flex align-items-center gap-2 py-2 text-danger">
+              <i class="bi bi-box-arrow-right fs-5"></i>
+              <div>
+                <span class="fw-semibold d-block">Cerrar sesión</span>
+                <small class="text-muted">Salir de este equipo</small>
+              </div>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

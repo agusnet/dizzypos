@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if is_sale %}Venta #{{ sell.id }}{% else %}Compra #{{ sell.id }}{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #printableTicket, #printableTicket * {
+      visibility: visible;
+    }
+    #printableTicket {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+
+      <!-- Botones de Acción (no visibles al imprimir) -->
+      <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <div>
+          {% if is_sale %}
+          <a href="{% url 'sales_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Lista de Ventas
+          </a>
+          <a href="{% url 'pos_sale' %}" class="btn btn-primary btn-sm ms-1">
+            <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+          </a>
+          {% else %}
+          <a href="{% url 'purchases_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Lista de Compras
+          </a>
+          <a href="{% url 'pos_purchase' %}" class="btn btn-success btn-sm ms-1">
+            <i class="bi bi-bag-plus me-1"></i> Nueva Compra
+          </a>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          {% if is_sale %}
+          <a href="{% url 'ticket_sale' sell.id %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-receipt me-1"></i> Formato Ticket
+          </a>
+          <a href="{% url 'ticket_sale_pdf' sell.id %}" class="btn btn-danger btn-sm" target="_blank">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+          </a>
+          {% else %}
+          <a href="{% url 'ticket_purchase' sell.id %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-receipt me-1"></i> Formato Ticket
+          </a>
+          <a href="{% url 'ticket_purchase_pdf' sell.id %}" class="btn btn-danger btn-sm" target="_blank">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+          </a>
+          {% endif %}
+          <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-printer me-1"></i> Imprimir
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjeta de Comprobante / Ticket -->
+      <div class="card border-0 shadow-sm rounded-3 p-4" id="printableTicket">
+        
+        <!-- Encabezado del Comprobante -->
+        <div class="text-center pb-3 border-bottom mb-3">
+          <h4 class="fw-bold mb-1">DizzyPOS</h4>
+          <p class="text-muted small mb-1">Sistema de Inventario y Ventas</p>
+          <span class="badge {% if is_sale %}bg-primary{% else %}bg-success{% endif %} fs-6 px-3 py-1">
+            {% if is_sale %}COMPROBANTE DE VENTA #{{ sell.id }}{% else %}COMPROBANTE DE COMPRA #{{ sell.id }}{% endif %}
+          </span>
+        </div>
+
+        <!-- Datos de la Transacción -->
+        <div class="row g-2 mb-3 small">
+          <div class="col-sm-6">
+            <p class="mb-1"><strong>Fecha:</strong> {{ sell.created_at|date:"d/m/Y H:i" }}</p>
+            <p class="mb-1"><strong>Atendido por:</strong> {{ sell.user.first_name|default:sell.user.username }}</p>
+          </div>
+          <div class="col-sm-6 text-sm-end">
+            {% if is_sale %}
+            <p class="mb-1"><strong>Cliente:</strong> {{ sell.person.full_name|default:"Público en general" }}</p>
+            {% if sell.person.phone1 %}<p class="mb-1"><strong>Teléfono:</strong> {{ sell.person.phone1 }}</p>{% endif %}
+            {% else %}
+            <p class="mb-1"><strong>Proveedor:</strong> {{ sell.person.full_name|default:"Proveedor General" }}</p>
+            {% if sell.person.company %}<p class="mb-1"><strong>Empresa:</strong> {{ sell.person.company }}</p>{% endif %}
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tabla de Artículos -->
+        <div class="table-responsive mb-3">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light small">
+              <tr>
+                <th style="width: 60px;" class="text-center">Cant.</th>
+                <th>Producto</th>
+                <th style="width: 110px;" class="text-end">Precio unit.</th>
+                <th style="width: 110px;" class="text-end">Importe</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in items %}
+              <tr>
+                <td class="text-center fw-bold">{{ it.operation.q|floatformat:0 }}</td>
+                <td>
+                  <span class="fw-semibold">{{ it.operation.product.name }}</span>
+                  {% if it.operation.product.barcode %}
+                  <small class="text-muted d-block">{{ it.operation.product.barcode }}</small>
+                  {% endif %}
+                </td>
+                <td class="text-end">${{ it.unit_price|floatformat:2 }}</td>
+                <td class="text-end fw-semibold">${{ it.subtotal|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resumen de Totales y Pago -->
+        <div class="row justify-content-end">
+          <div class="col-sm-6 col-md-5">
+            <div class="bg-light p-3 rounded-3 small">
+              <div class="d-flex justify-content-between mb-1">
+                <span>Subtotal:</span>
+                <span class="fw-semibold">${{ calculated_subtotal|floatformat:2 }}</span>
+              </div>
+              {% if sell.discount > 0 %}
+              <div class="d-flex justify-content-between mb-1 text-danger">
+                <span>Descuento:</span>
+                <span>-${{ sell.discount|floatformat:2 }}</span>
+              </div>
+              {% endif %}
+              <div class="d-flex justify-content-between fs-5 fw-bold pt-2 border-top text-dark mb-2">
+                <span>Total:</span>
+                <span class="{% if is_sale %}text-primary{% else %}text-success{% endif %}">${{ sell.total|floatformat:2 }}</span>
+              </div>
+              
+              {% if is_sale %}
+              <div class="d-flex justify-content-between text-muted pt-1 border-top">
+                <span>Pago recibido:</span>
+                <span>${{ sell.cash|floatformat:2 }}</span>
+              </div>
+              <div class="d-flex justify-content-between fw-bold text-success pt-1">
+                <span>Cambio entregado:</span>
+                <span>${{ sell.change|floatformat:2 }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Pie de Ticket -->
+        <div class="text-center text-muted small mt-4 pt-3 border-top">
+          <p class="mb-0">¡Gracias por su preferencia!</p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

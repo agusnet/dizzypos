@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4">
+
+  {% if is_seller %}
+  <!-- VISTA PARA VENDEDOR: SOLO VENTAS DEL DÍA -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0">Panel de Ventas</h3>
+      <p class="text-muted mb-0">Resumen de tus ventas del día</p>
+    </div>
+    <div>
+      <a href="{% url 'pos_sale' %}" class="btn btn-primary px-3 py-2 fw-semibold">
+        <i class="bi bi-cart-plus me-1"></i> Ir al Punto de Venta
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 me-3 fs-3">
+            <i class="bi bi-cash-coin"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Monto de ventas hoy</span>
+            <span class="h3 fw-bold mb-0 text-primary">${{ total_sales_today|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-success bg-opacity-10 text-success p-3 me-3 fs-3">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Tickets / Ventas hoy</span>
+            <span class="h3 fw-bold mb-0 text-success">{{ count_sales_today }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Ventas de Hoy para el Vendedor -->
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0 text-dark">
+        <i class="bi bi-cart-check text-primary me-1"></i> Ventas Realizadas Hoy
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      {% if recent_sales %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 table-hover">
+          <thead class="table-light small">
+            <tr>
+              <th># Venta</th>
+              <th>Cliente</th>
+              <th>Hora</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Pago</th>
+              <th class="text-end">Cambio</th>
+              <th class="text-center">Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in recent_sales %}
+            <tr>
+              <td class="fw-bold text-primary">#{{ sale.id }}</td>
+              <td>{{ sale.person.name|default:"Público General" }}</td>
+              <td class="text-muted small">{{ sale.created_at|date:"H:i" }}</td>
+              <td class="text-end fw-bold">${{ sale.total|floatformat:2 }}</td>
+              <td class="text-end text-muted small">${{ sale.cash|floatformat:2 }}</td>
+              <td class="text-end text-success fw-semibold small">${{ sale.change|floatformat:2 }}</td>
+              <td class="text-center">
+                <a href="{% url 'sell_detail' sale.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Ver ticket">
+                  <i class="bi bi-eye"></i> Ver
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-cart-x fs-1 d-block mb-2 opacity-50"></i>
+        No se han registrado ventas hoy. Comienza abriendo el punto de venta.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% else %}
+  <!-- VISTA PARA ADMINISTRADOR: DASHBOARD COMPLETO CON GRÁFICA CHART.JS -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0">Panel Principal</h3>
+      <p class="text-muted mb-0">Resumen general de inventario, ventas y compras</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'pos_sale' %}" class="btn btn-primary px-3 py-2 fw-semibold">
+        <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+      </a>
+      <a href="{% url 'pos_purchase' %}" class="btn btn-success px-3 py-2 fw-semibold">
+        <i class="bi bi-bag-plus me-1"></i> Nueva Compra
+      </a>
+    </div>
+  </div>
+
+  <!-- Tarjetas de métricas -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 me-3 fs-3">
+            <i class="bi bi-cash-coin"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Ventas de hoy ({{ count_sales_today }})</span>
+            <span class="h4 fw-bold mb-0">${{ total_sales_today|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-success bg-opacity-10 text-success p-3 me-3 fs-3">
+            <i class="bi bi-truck"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Compras de hoy ({{ count_purchases_today }})</span>
+            <span class="h4 fw-bold mb-0">${{ total_purchases_today|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-info bg-opacity-10 text-info p-3 me-3 fs-3">
+            <i class="bi bi-box-seam"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Productos activos</span>
+            <span class="h4 fw-bold mb-0">{{ total_products }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-3 me-3 fs-3">
+            <i class="bi bi-people"></i>
+          </div>
+          <div>
+            <span class="text-muted small d-block">Clientes registrados</span>
+            <span class="h4 fw-bold mb-0">{{ total_clients }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICA DE VENTAS DE LOS ÚLTIMOS 30 DÍAS (Chart.js) -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0 text-dark">
+        <i class="bi bi-graph-up text-primary me-2"></i> Ventas de los últimos 30 días
+      </h5>
+      <span class="badge bg-light text-dark border">Gráfica diaria</span>
+    </div>
+    <div class="card-body pt-0">
+      <div style="height: 280px; width: 100%;">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Alertas de stock bajo -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i> Stock Mínimo o Agotado
+          </h5>
+          <a href="{% url 'inventory_list' %}?status=low" class="btn btn-sm btn-outline-secondary">Ver todo</a>
+        </div>
+        <div class="card-body p-0">
+          {% if low_stock_products %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+              <thead class="table-light small">
+                <tr>
+                  <th>Producto</th>
+                  <th class="text-center">Existencia</th>
+                  <th class="text-center">Mínimo</th>
+                  <th class="text-end">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for prod in low_stock_products %}
+                <tr>
+                  <td>
+                    <span class="fw-semibold d-block">{{ prod.name }}</span>
+                    <small class="text-muted">{{ prod.category.name|default:"Sin categoría" }}</small>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge {% if prod.current_stock <= 0 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                      {{ prod.current_stock|floatformat:0 }}
+                    </span>
+                  </td>
+                  <td class="text-center text-muted small">{{ prod.inventary_min }}</td>
+                  <td class="text-end">
+                    <a href="{% url 'pos_purchase' %}" class="btn btn-sm btn-outline-success py-0 px-2" title="Comprar para surtir">
+                      + Surtir
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-check-circle text-success fs-1 d-block mb-2"></i>
+            No hay productos con stock bajo en este momento.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Últimas Ventas y Compras -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">
+            <i class="bi bi-cart-check text-primary me-1"></i> Últimas Ventas
+          </h5>
+          <a href="{% url 'sales_list' %}" class="btn btn-sm btn-outline-secondary">Ver historial</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_sales %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+              <thead class="table-light small">
+                <tr>
+                  <th># Venta</th>
+                  <th>Cliente</th>
+                  <th>Fecha</th>
+                  <th class="text-end">Total</th>
+                  <th class="text-center">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sale in recent_sales %}
+                <tr>
+                  <td class="fw-bold text-primary">#{{ sale.id }}</td>
+                  <td>{{ sale.person.name|default:"Público General" }}</td>
+                  <td class="text-muted small">{{ sale.created_at|date:"d/m/Y H:i" }}</td>
+                  <td class="text-end fw-bold">${{ sale.total|floatformat:2 }}</td>
+                  <td class="text-center">
+                    <a href="{% url 'sell_detail' sale.id %}" class="btn btn-sm btn-light border py-1 px-2">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">
+            No se han registrado ventas aún.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Últimas Compras -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">
+            <i class="bi bi-bag-plus text-success me-1"></i> Últimas Compras
+          </h5>
+          <a href="{% url 'purchases_list' %}" class="btn btn-sm btn-outline-secondary">Ver historial</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_purchases %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+              <thead class="table-light small">
+                <tr>
+                  <th># Compra</th>
+                  <th>Proveedor</th>
+                  <th>Fecha</th>
+                  <th class="text-end">Total</th>
+                  <th class="text-center">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for purchase in recent_purchases %}
+                <tr>
+                  <td class="fw-bold text-success">#{{ purchase.id }}</td>
+                  <td>{{ purchase.person.name|default:"Proveedor General" }}</td>
+                  <td class="text-muted small">{{ purchase.created_at|date:"d/m/Y H:i" }}</td>
+                  <td class="text-end fw-bold">${{ purchase.total|floatformat:2 }}</td>
+                  <td class="text-center">
+                    <a href="{% url 'sell_detail' purchase.id %}" class="btn btn-sm btn-light border py-1 px-2">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">
+            No se han registrado compras aún.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not is_seller %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesChart');
+    if (!ctx) return;
+
+    const labels = {{ chart_labels_json|safe }};
+    const data = {{ chart_data_json|safe }};
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Ventas ($)',
+          data: data,
+          backgroundColor: 'rgba(13, 110, 253, 0.1)',
+          borderColor: '#0d6efd',
+          borderWidth: 2,
+          pointBackgroundColor: '#0d6efd',
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.25
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Total: $' + context.parsed.y.toFixed(2);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value;
+              }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}
